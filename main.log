@@ -1,0 +1,309 @@
+----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\amirh\Dropbox\PhD\3\Econ 565\Exercise 2\main.log
+  log type:  text
+ opened on:  22 Dec 2019, 11:34:55
+
+. 
+. set more off
+
+. pause on 
+
+. 
+. /********************DATA WITH SIGMA_D = 1 ****************************/
+. import delimited data_market.csv, encoding(Big5) clear
+(6 vars, 160,000 obs)
+
+. 
+. rename v1 y
+
+. rename v3 x
+
+. rename v4 p
+
+. rename v2 market
+
+. rename v5 w
+
+. rename v6 c
+
+. 
+. local iter      = 100
+
+. local M         = 500
+
+. local iter1 = 2
+
+. mat r_ols       = J(6,`iter',.)
+
+. mat r_iv        = J(6,`iter',.)
+
+. 
+. 
+. // Drop invalid draws in the sample
+. drop if market == 0                     //Invalid draw in which the monte carlo didn't have an answer
+(18,012 observations deleted)
+
+. drop if y == "-Inf" | y == "Inf" //Share of one of the products is zero
+(1,469 observations deleted)
+
+. destring, replace
+y: all characters numeric; replaced as double
+market already numeric; no replace
+x already numeric; no replace
+p already numeric; no replace
+w already numeric; no replace
+c already numeric; no replace
+
+. duplicates tag market, g(tag)
+
+Duplicates in terms of market
+
+. drop if tag == 0
+(1,311 observations deleted)
+
+. drop tag
+
+. unique market
+Number of unique values of market is  69604
+Number of records is  139208
+
+. local all = 2*`M'*`iter'
+
+. dis `all'
+100000
+
+. keep in 1/`all'                 //Keep only 2*500*100 = M*iter observations
+(39,208 observations deleted)
+
+. gen obs = _n
+
+. 
+. gen temp1 = x[_n - 1]
+(1 missing value generated)
+
+. gen temp2 = x[_n + 1]
+(1 missing value generated)
+
+. replace temp1 = . if market ~= market[_n-1]
+(49,999 real changes made, 49,999 to missing)
+
+. replace temp2 = . if market ~= market[_n+1]
+(49,999 real changes made, 49,999 to missing)
+
+. 
+. gen x_rival = temp1
+(50,000 missing values generated)
+
+. replace x_rival = temp2 if x_rival == .
+(50,000 real changes made)
+
+. drop temp1 temp2
+
+. 
+. /******************** REGRESSIOINS ****************************/
+. forvalues i = 1(1)`iter'{
+  2.         local l = 2*`M'*(`i' - 1) + 1
+  3.         local h = 2*`M'*`i'
+  4.         qui reg y x p if obs >= `l' & obs <= `h'
+  5.         mat r_ols[1, `i'] = -_b[p]
+  6.         mat r_ols[2, `i'] = _se[p]
+  7.         mat r_ols[3, `i'] = _b[x]
+  8.         mat r_ols[4, `i'] = _se[x]
+  9.         mat r_ols[5, `i'] = _b[_cons]
+ 10.         mat r_ols[6, `i'] = _se[_cons]
+ 11. 
+.         qui ivreg y x (p = w x_rival) if obs >= `l' & obs <= `h'
+ 12.         mat r_iv[1, `i'] = -_b[p]
+ 13.         mat r_iv[2, `i'] = _se[p]
+ 14.         mat r_iv[3, `i'] = _b[x]
+ 15.         mat r_iv[4, `i'] = _se[x]
+ 16.         mat r_iv[5, `i'] = _b[_cons]
+ 17.         mat r_iv[6, `i'] = _se[_cons]
+ 18. }
+
+. 
+. mata : st_matrix("mean_ols", rowsum(st_matrix("r_ols")))
+
+. mat mean_ols = mean_ols/`iter'
+
+. mata : st_matrix("mean_iv", rowsum(st_matrix("r_iv")))
+
+. mat mean_iv = mean_iv/`iter'
+
+. 
+. matlist mean_ols
+
+             |        c1 
+-------------+-----------
+          r1 |  .4706165 
+          r2 |  .0203266 
+          r3 |  1.082509 
+          r4 |  .0423719 
+          r5 |  2.420965 
+          r6 |  .1019833 
+
+. matlist mean_iv
+
+             |        c1 
+-------------+-----------
+          r1 |  1.023738 
+          r2 |  .0684683 
+          r3 |  1.959151 
+          r4 |  .1145266 
+          r5 |  5.109557 
+          r6 |  .3345032 
+
+. 
+. 
+. /********************DATA WITH SIGMA_D = 3 ****************************/
+. import delimited data_market3.csv, encoding(Big5) clear
+(6 vars, 160,000 obs)
+
+. 
+. rename v1 y
+
+. rename v3 x
+
+. rename v4 p
+
+. rename v2 market
+
+. rename v5 w
+
+. rename v6 c
+
+. 
+. local iter      = 100
+
+. local M         = 500
+
+. local iter1 = 2
+
+. mat r_ols       = J(6,`iter',.)
+
+. mat r_iv        = J(6,`iter',.)
+
+. 
+. 
+. // Drop invalid draws in the sample
+. drop if market == 0                     //Invalid draw in which the monte carlo didn't have an answer
+(45,134 observations deleted)
+
+. drop if y == "-Inf" | y == "Inf" //Share of one of the products is zero
+(5,023 observations deleted)
+
+. destring, replace
+y: all characters numeric; replaced as double
+market already numeric; no replace
+x already numeric; no replace
+p already numeric; no replace
+w already numeric; no replace
+c already numeric; no replace
+
+. duplicates tag market, g(tag)
+
+Duplicates in terms of market
+
+. drop if tag == 0
+(3,269 observations deleted)
+
+. drop tag
+
+. unique market
+Number of unique values of market is  53287
+Number of records is  106574
+
+. local all = 2*`M'*`iter'
+
+. dis `all'
+100000
+
+. keep in 1/`all'                 //Keep only 2*500*100 = M*iter observations
+(6,574 observations deleted)
+
+. gen obs = _n
+
+. 
+. gen temp1 = x[_n - 1]
+(1 missing value generated)
+
+. gen temp2 = x[_n + 1]
+(1 missing value generated)
+
+. replace temp1 = . if market ~= market[_n-1]
+(49,999 real changes made, 49,999 to missing)
+
+. replace temp2 = . if market ~= market[_n+1]
+(49,999 real changes made, 49,999 to missing)
+
+. 
+. gen x_rival = temp1
+(50,000 missing values generated)
+
+. replace x_rival = temp2 if x_rival == .
+(50,000 real changes made)
+
+. drop temp1 temp2
+
+. 
+. /******************** REGRESSIOINS ****************************/
+. forvalues i = 1(1)`iter'{
+  2.         local l = 2*`M'*(`i' - 1) + 1
+  3.         local h = 2*`M'*`i'
+  4.         qui reg y x p if obs >= `l' & obs <= `h'
+  5.         mat r_ols[1, `i'] = _b[p]
+  6.         mat r_ols[2, `i'] = _se[p]
+  7.         mat r_ols[3, `i'] = _b[x]
+  8.         mat r_ols[4, `i'] = _se[x]
+  9.         mat r_ols[5, `i'] = _b[_cons]
+ 10.         mat r_ols[6, `i'] = _se[_cons]
+ 11. 
+.         qui ivreg y x (p = w x_rival) if obs >= `l' & obs <= `h'
+ 12.         mat r_iv[1, `i'] = _b[p]
+ 13.         mat r_iv[2, `i'] = _se[p]
+ 14.         mat r_iv[3, `i'] = _b[x]
+ 15.         mat r_iv[4, `i'] = _se[x]
+ 16.         mat r_iv[5, `i'] = _b[_cons]
+ 17.         mat r_iv[6, `i'] = _se[_cons]
+ 18. }
+
+. 
+. mata : st_matrix("mean_ols", rowsum(st_matrix("r_ols")))
+
+. mat mean_ols = mean_ols/`iter'
+
+. mata : st_matrix("mean_iv", rowsum(st_matrix("r_iv")))
+
+. mat mean_iv = mean_iv/`iter'
+
+. 
+. matlist mean_ols
+
+             |        c1 
+-------------+-----------
+          r1 |  .2697995 
+          r2 |  .0329634 
+          r3 | -.2314665 
+          r4 |  .0703975 
+          r5 | -1.281444 
+          r6 |  .1697576 
+
+. matlist mean_iv
+
+             |        c1 
+-------------+-----------
+          r1 | -.5429064 
+          r2 |  .1129259 
+          r3 |  .8718062 
+          r4 |  .1682943 
+          r5 |  2.709995 
+          r6 |  .5584984 
+
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\amirh\Dropbox\PhD\3\Econ 565\Exercise 2\main.log
+  log type:  text
+ closed on:  22 Dec 2019, 11:35:17
+----------------------------------------------------------------------------------------------------------------

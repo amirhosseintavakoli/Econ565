@@ -8,3 +8,5 @@ Econ565_exercise1.ipynb: I code a monte carlo simulation to produce data for a t
 data.jl: It generates the data based on the model provided in section 8 of Berry (1994) RAND. Then, I use this data to estimate the parameters of the model
 
 main.do: It uses data from "data.jl" to replicate the Table 1 of Berry (1994). The estimates for column 1 and 2 are very similar to estimates reported in the paper, however, the estimates in column 3 and 4 are not.
+
+main.log: The log file of main.do

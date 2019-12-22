@@ -104,4 +104,5 @@ for m = 1:M*iter
     end
 end
 
-writedlm( "data_market3.csv",  [Y X1], ',')
+# writedlm( "data_market.csv",  [Y X1], ',') # for σ_d = 1
+writedlm( "data_market3.csv",  [Y X1], ',') # for σ_d = 3
